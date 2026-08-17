@@ -7,8 +7,8 @@
  * 引脚分配 (与项目记录 MD 一致):
  *   PA0  : 光敏信号输入 (上拉输入; 高=环境亮=触发工作, 低=环境暗=停止)
  *   PA6  : TIM3_CH1 舵机 PWM 输出 (50Hz, 500~1833us, 270°舵机限幅)
- *   PB12 : 5A单路H桥 IN1 (推杆正转上桥)
- *   PB13 : 5A单路H桥 IN2 (推杆正转下桥)
+ *   PA1  : 5A单路H桥 IN1 (推杆正转上桥)
+ *   PA2  : 5A单路H桥 IN2 (推杆正转下桥)
  *   PA7  : 5A单路H桥 IN3 (推杆反转上桥)
  *   PA5  : 5A单路H桥 IN4 (推杆反转下桥)
  *   PC13 : 板载 LED 状态指示 (低电平点亮; 可选)
@@ -177,10 +177,10 @@ static void hw_init(void)
     GPIOA_CRL |=  (0x3UL << 20) | (0x3UL << 28);     /* CNF=00 MODE=11 (推挽 50MHz) */
     GPIOA_ODR &= ~((1UL << 5) | (1UL << 7));         /* 初始低 */
 
-    /* --- PB12/13: H桥 IN1/IN2, 推挽输出, 初始全低 (复位安全) --- */
-    GPIOB_CRH &= ~(0xFFUL << 0);                     /* PB12 bit0-3, PB13 bit4-7 */
-    GPIOB_CRH |=  (0x33UL << 0);                     /* CNF=00 MODE=11 */
-    GPIOB_ODR &= ~((1UL << 12) | (1UL << 13));
+    /* --- PA1/PA2: H桥 IN1/IN2, 推挽输出 50MHz, 初始低 --- */
+    GPIOA_CRL &= ~((0xFUL << 4) | (0xFUL << 8));    /* PA1 bit4-7, PA2 bit8-11 */
+    GPIOA_CRL |=  (0x3UL << 4) | (0x3UL << 8);       /* CNF=00 MODE=11 (推挽 50MHz) */
+    GPIOA_ODR &= ~((1UL << 1) | (1UL << 2));         /* 初始低 */
 
 #if LED_INDICATOR_EN
     /* --- PC13: 板载 LED --- */
@@ -219,16 +219,16 @@ static void servo_set_pulse(unsigned long us)
  *   停止: 全 0
  * ⚠ 真值表警告: IN1&IN2 同时为 1 或 IN3&IN4 同时为 1 会烧 MOS!
  *   (本驱动函数保证任意时刻最多只有一个方向桥导通) */
-#define HBR_IN1   (1UL << 12)   /* PB12 -> 模块 IN1 */
-#define HBR_IN2   (1UL << 13)   /* PB13 -> 模块 IN2 */
+#define HBR_IN1   (1UL << 1)    /* PA1  -> 模块 IN1 */
+#define HBR_IN2   (1UL << 2)    /* PA2  -> 模块 IN2 */
 #define HBR_IN3   (1UL << 7)    /* PA7  -> 模块 IN3 */
 #define HBR_IN4   (1UL << 5)    /* PA5  -> 模块 IN4 */
 
 /* 推杆伸出 (正转): IN1=1 IN2=0 IN3=1 IN4=0 */
 static void actuator_extend(void)
 {
-    GPIOB_ODR |=  HBR_IN1;               /* IN1 = 1 */
-    GPIOB_ODR &= ~HBR_IN2;               /* IN2 = 0 */
+    GPIOA_ODR |=  HBR_IN1;               /* IN1 = 1 */
+    GPIOA_ODR &= ~HBR_IN2;               /* IN2 = 0 */
     GPIOA_ODR |=  HBR_IN3;               /* IN3 = 1 */
     GPIOA_ODR &= ~HBR_IN4;               /* IN4 = 0 */
 }
@@ -236,8 +236,8 @@ static void actuator_extend(void)
 /* 推杆缩回 (反转): IN1=0 IN2=1 IN3=0 IN4=1 */
 static void actuator_retract(void)
 {
-    GPIOB_ODR &= ~HBR_IN1;               /* IN1 = 0 */
-    GPIOB_ODR |=  HBR_IN2;               /* IN2 = 1 */
+    GPIOA_ODR &= ~HBR_IN1;               /* IN1 = 0 */
+    GPIOA_ODR |=  HBR_IN2;               /* IN2 = 1 */
     GPIOA_ODR &= ~HBR_IN3;               /* IN3 = 0 */
     GPIOA_ODR |=  HBR_IN4;               /* IN4 = 1 */
 }
@@ -245,8 +245,7 @@ static void actuator_retract(void)
 /* 推杆停止: 全部信号清 0 (先清方向, 防直通烧 MOS) */
 static void actuator_stop(void)
 {
-    GPIOB_ODR &= ~(HBR_IN1 | HBR_IN2);
-    GPIOA_ODR &= ~(HBR_IN3 | HBR_IN4);
+    GPIOA_ODR &= ~(HBR_IN1 | HBR_IN2 | HBR_IN3 | HBR_IN4);
 }
 
 /* ============================ 光敏检测 (带消抖) ========================== */
