@@ -1,0 +1,20 @@
+# Keil 自动生成文件
+*.uvguix.*
+*.uvoptx
+Objects/
+Listings/
+DebugConfig/
+RTE/
+build.log
+
+# 系统文件
+Thumbs.db
+.DS_Store
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# OCR/临时脚本(仅本地)
+ocr_*.ps1
+ocr_result.txt
