@@ -74,7 +74,7 @@
 
 /* ============================ 可配置参数 ================================= */
 #define HSE_VALUE           8000000UL   /* 外部晶振 8MHz */
-#define SYSCLK_FREQ         72000000UL  /* 系统时钟 72MHz */
+#define SYSCLK_FREQ         8000000UL   /* 系统时钟 8MHz (HSI, 无外部晶振) */
 
 /* ---- 舵机 PWM (TIM3_CH1 @ PA6) ---- */
 #define SERVO_FREQ_HZ       50UL        /* 舵机标准频率 50Hz */
@@ -150,21 +150,12 @@ static void delay_ms(unsigned long ms)
 
 void SystemInit(void)
 {
-    /* 使能 HSE (外部 8MHz 晶振) */
-    RCC_CR |= (1UL << 16);                       /* HSEON */
-    while (!(RCC_CR & (1UL << 17))) { }          /* 等待 HSERDY */
-
-    /* 配置 PLL: HSE 作为源, 9 倍频 -> 72MHz */
-    RCC_CFGR &= ~((0xFUL << 18) | (1UL << 16));
-    RCC_CFGR |= (0x7UL << 18) | (1UL << 16);     /* PLLMUL=7(x9), PLLSRC=HSE */
-
-    /* 打开 PLL 并等待锁定 */
-    RCC_CR |= (1UL << 24);                       /* PLLON */
-    while (!(RCC_CR & (1UL << 25))) { }          /* 等待 PLLRDY */
-
-    /* 切换系统时钟到 PLL */
-    RCC_CFGR = (RCC_CFGR & ~(0x3UL)) | (0x2UL);  /* SW=PLL */
-    while ((RCC_CFGR & 0x3UL) != 0x2UL) { }      /* 等待 SWS=PLL */
+    /* ponytail: 用 HSI 内部 8MHz, 不依赖外部晶振(晶振虚焊/坏板会卡死 HSE 等待)
+     * 若要 72MHz 精度(舵机 PWM 更准), 换好晶振的板子后恢复 HSE+PLL 配置 */
+    RCC_CR   &= ~(1UL << 24);                   /* PLLON=0 (保持关闭) */
+    RCC_CR   |=  (1UL << 0);                    /* HSION=1 */
+    RCC_CFGR &= ~(0x3UL);                       /* SW=HSI */
+    while ((RCC_CFGR & 0x3UL) != 0) { }         /* 等待 SWS=HSI */
 }
 
 static void hw_init(void)
@@ -199,7 +190,7 @@ static void hw_init(void)
 #endif
 
     /* --- TIM3_CH1 PWM: 50Hz, 1us 计数 --- */
-    TIM3_PSC  = 71;                              /* 72MHz/72 = 1MHz */
+    TIM3_PSC  = 7;                               /* 8MHz/8 = 1MHz (HSI) */
     TIM3_ARR  = (SYSCLK_FREQ / SERVO_FREQ_HZ) / 72UL - 1UL;  /* 19999 */
     TIM3_CCMR1 = (0x6UL << 4) | (1UL << 3);      /* OC1M=110 PWM1, OC1PE=1 */
     TIM3_CCER  = (1UL << 0);                     /* CC1E=1 */
