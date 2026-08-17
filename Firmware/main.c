@@ -191,7 +191,7 @@ static void hw_init(void)
 
     /* --- TIM3_CH1 PWM: 50Hz, 1us 计数 --- */
     TIM3_PSC  = 7;                               /* 8MHz/8 = 1MHz (HSI) */
-    TIM3_ARR  = (SYSCLK_FREQ / SERVO_FREQ_HZ) / 72UL - 1UL;  /* 19999 */
+    TIM3_ARR  = (SYSCLK_FREQ / (TIM3_PSC + 1UL)) / SERVO_FREQ_HZ - 1UL;  /* 1MHz/50Hz = 19999 */
     TIM3_CCMR1 = (0x6UL << 4) | (1UL << 3);      /* OC1M=110 PWM1, OC1PE=1 */
     TIM3_CCER  = (1UL << 0);                     /* CC1E=1 */
     TIM3_CCR1  = PULSE_CENTER_US;
