@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>吹雪机控制系统原理图 V4 (1.7固件版)</title>
+<style>
+  body { font-family: "Microsoft YaHei", sans-serif; background: #fff; color: #222; margin: 20px; }
+  h1 { text-align: center; color: #1F3B73; }
+  h2 { color: #1F3B73; border-bottom: 2px solid #1F3B73; padding-bottom: 4px; margin-top: 30px; }
+  h3 { color: #C0392B; }
+  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 13px; }
+  th, td { border: 1px solid #999; padding: 5px 8px; text-align: left; }
+  th { background: #D6E4F0; }
+  .warn { color: #C0392B; font-weight: bold; }
+  .ok { color: #1E8E3E; font-weight: bold; }
+  .note { background: #FFF8E1; border-left: 4px solid #F9A825; padding: 8px 12px; margin: 10px 0; font-size: 13px; }
+  svg { background: #FAFAFA; border: 1px solid #CCC; margin: 10px 0; }
+  .net { font-family: Consolas, monospace; }
+</style>
+</head>
+<body>
+<h1>❄️ 吹雪机控制系统 — 原理图(固件 v1.7)</h1>
+<p style="text-align:center;">STM32F103C8T6 | 5A单路H桥 GZ-PMDC-120A7T | 2026-08-17 | V4.0</p>
+
+<h2>一、1.7 固件引脚分配(原理图依据)</h2>
+<table>
+  <tr><th>STM32 引脚</th><th>功能</th><th>接到</th><th>类型</th></tr>
+  <tr><td class="net">PA0</td><td>光敏输入</td><td>光敏继电器触点</td><td>上拉输入</td></tr>
+  <tr><td class="net">PA6</td><td>TIM3_CH1 舵机 PWM</td><td>舵机信号线</td><td>复用推挽输出</td></tr>
+  <tr><td class="net">PA1</td><td>H桥 IN1(正转上桥)</td><td>模块 IN1</td><td>推挽输出</td></tr>
+  <tr><td class="net">PA2</td><td>H桥 IN2(正转下桥)</td><td>模块 IN2</td><td>推挽输出</td></tr>
+  <tr><td class="net">PA7</td><td>H桥 IN3(反转上桥)</td><td>模块 IN3</td><td>推挽输出</td></tr>
+  <tr><td class="net">PA5</td><td>H桥 IN4(反转下桥)</td><td>模块 IN4</td><td>推挽输出</td></tr>
+  <tr><td class="net">PC13</td><td>板载 LED(可选)</td><td>LED → 3.3V</td><td>开漏输出</td></tr>
+  <tr><td class="net">PA13/PA14</td><td>SWD 烧录</td><td>ST-Link</td><td>调试</td></tr>
+  <tr><td class="net">NRST</td><td>复位</td><td>10kΩ上拉 + 100nF</td><td>—</td></tr>
+  <tr><td class="net">BOOT0</td><td>启动选择</td><td>10kΩ下拉 GND</td><td>—</td></tr>
+</table>
+
+<div class="note">
+  ⚠️ <b>v1.7 关键变更</b>:H桥 IN1/IN2 从 PB12/PB13 改为 <b>PA1/PA2</b>(原 PB 口排针异常)。
+  原理图/PCB 必须按此引脚绘制,与 1.7 固件一致。
+</div>
+
+<h2>二、电源树</h2>
+<table>
+  <tr><th>电源</th><th>来源</th><th>保护</th><th>去向</th></tr>
+  <tr><td>24V</td><td>DC-DC1 (30~90V→24V/5A)</td><td>F1=4A + TVS SMBJ26A</td><td>H桥模块 12-24V+</td></tr>
+  <tr><td>5V</td><td>DC-DC2 (15~90V→5V/8A)</td><td>F2=5A + TVS SMBJ6.0A</td><td>舵机 / 光敏 / 板载 LDO</td></tr>
+  <tr><td>3.3V</td><td>AMS1117-3.3 (板载)</td><td>10µF + 100nF 去耦</td><td>STM32 VDD/VDDA</td></tr>
+  <tr><td>舵机 VCC</td><td>5V 分支</td><td>F3=3A + 1000µF 电解</td><td>舵机红线</td></tr>
+</table>
+
+<h2>三、原理图(文字版)</h2>
+
+<h3>3.1 STM32 最小系统(HSI 无晶振)</h3>
+<table>
+  <tr><th>元件</th><th>规格</th><th>连接</th><th>作用</th></tr>
+  <tr><td>U1</td><td>STM32F103C8T6 LQFP48</td><td>—</td><td>主控</td></tr>
+  <tr><td>U2</td><td>AMS1117-3.3</td><td>VIN←5V, VOUT→3.3V</td><td>5V→3.3V 稳压</td></tr>
+  <tr><td>C1-C4</td><td>100nF 0603</td><td>每 VDD 引脚→GND</td><td>去耦</td></tr>
+  <tr><td>C5</td><td>10µF 0805</td><td>3.3V→GND</td><td>稳压输出滤波</td></tr>
+  <tr><td>C6</td><td>1µF + 10Ω</td><td>VDDA→VDD, 10Ω串</td><td>模拟电源滤波</td></tr>
+  <tr><td>R1</td><td>10kΩ</td><td>NRST→3.3V</td><td>复位上拉</td></tr>
+  <tr><td>C7</td><td>100nF</td><td>NRST→GND</td><td>复位滤波</td></tr>
+  <tr><td>R2</td><td>10kΩ</td><td>BOOT0→GND</td><td>Flash 启动</td></tr>
+  <tr><td>—</td><td>无晶振!</td><td>OSC_IN/OUT 悬空</td><td>HSI 内部时钟(固件 1.7)</td></tr>
+  <tr><td>J1</td><td>4pin 排针 SWD</td><td>PA13/PA14/GND/3.3V</td><td>烧录调试</td></tr>
+</table>
+
+<h3>3.2 光敏输入保护电路</h3>
+<table>
+  <tr><th>元件</th><th>规格</th><th>连接</th><th>作用</th></tr>
+  <tr><td>R3</td><td>10kΩ</td><td>PA0→3.3V</td><td>上拉(光敏断开时高)</td></tr>
+  <tr><td>R4</td><td>1kΩ</td><td>光敏触点→PA0</td><td>限流</td></tr>
+  <tr><td>C8</td><td>100nF</td><td>PA0→GND</td><td>滤波(消抖)</td></tr>
+  <tr><td>D1</td><td>BAT54S</td><td>PA0 钳位到 3.3V/GND</td><td>ESD 保护</td></tr>
+</table>
+
+<h3>3.3 舵机 PWM 输出保护</h3>
+<table>
+  <tr><th>元件</th><th>规格</th><th>连接</th><th>作用</th></tr>
+  <tr><td>R5</td><td>220Ω</td><td>PA6→舵机信号</td><td>串阻限流</td></tr>
+  <tr><td>R6</td><td>100kΩ</td><td>PA6→GND</td><td>下拉(复位防抖)</td></tr>
+  <tr><td>C9</td><td>10nF</td><td>PA6→GND</td><td>RC 滤波(防发动机干扰)</td></tr>
+</table>
+
+<h3>3.4 H桥信号保护(PA1/PA2/PA7/PA5 ×4路)</h3>
+<p>每路相同,以 PA1/IN1 为例:</p>
+<table>
+  <tr><th>元件</th><th>规格</th><th>连接</th><th>作用</th></tr>
+  <tr><td>R7</td><td>1kΩ</td><td>PA1→模块 IN1</td><td>串阻限流(4路: R7-R10)</td></tr>
+  <tr><td>R11</td><td>100kΩ</td><td>PA1→GND</td><td>下拉(复位防误触发)(4路: R11-R14)</td></tr>
+  <tr><td>C10</td><td>10nF</td><td>PA1→GND</td><td>RC 滤波(4路: C10-C13)</td></tr>
+  <tr><td>D2-D5</td><td>BAT54S</td><td>各 IN→3.3V/GND 钳位</td><td>ESD 保护</td></tr>
+</table>
+
+<h3>3.5 H桥模块接口(GZ-PMDC-120A7T)</h3>
+<table>
+  <tr><th>模块端子</th><th>接到</th><th>保护</th></tr>
+  <tr><td>12-24V +</td><td>24V(经 F1=4A + TVS)</td><td>4A 保险丝 + SMBJ26A</td></tr>
+  <tr><td>12-24V −</td><td>GND(共地)</td><td>—</td></tr>
+  <tr><td>IN1</td><td>PA1(经 R7)</td><td>1kΩ + 100kΩ下拉 + 10nF</td></tr>
+  <tr><td>IN2</td><td>PA2(经 R8)</td><td>同上</td></tr>
+  <tr><td>IN3</td><td>PA7(经 R9)</td><td>同上</td></tr>
+  <tr><td>IN4</td><td>PA5(经 R10)</td><td>同上</td></tr>
+  <tr><td>COM</td><td>GND</td><td>外部取电必须</td></tr>
+  <tr><td>电机 +</td><td>推杆红线(经 10A)</td><td>10A 保险丝</td></tr>
+  <tr><td>电机 −</td><td>推杆黑线</td><td>—</td></tr>
+  <tr><td>5V 输出</td><td>不接</td><td>内部取电才用</td></tr>
+</table>
+
+<h3>3.6 舵机接口</h3>
+<table>
+  <tr><th>端子</th><th>接到</th><th>保护</th></tr>
+  <tr><td>VCC 红</td><td>5V(经 F3=3A)</td><td>3A 保险丝 + 1000µF 电解 + 100nF</td></tr>
+  <tr><td>GND 棕</td><td>GND</td><td>—</td></tr>
+  <tr><td>信号 橙</td><td>PA6(经 R5=220Ω)</td><td>220Ω + 100kΩ下拉 + 10nF</td></tr>
+</table>
+
+<h3>3.7 光敏接口</h3>
+<table>
+  <tr><th>端子</th><th>接到</th><th>保护</th></tr>
+  <tr><td>VCC</td><td>5V(经 F5=0.5A)</td><td>0.5A 保险丝</td></tr>
+  <tr><td>GND</td><td>GND</td><td>—</td></tr>
+  <tr><td>触点 COM</td><td>PA0(经 R4=1kΩ)</td><td>1kΩ + 10kΩ上拉 + 100nF + BAT54</td></tr>
+</table>
+
+<h2>四、保护电路汇总</h2>
+<table>
+  <tr><th>保护类型</th><th>器件</th><th>位置</th><th>保护对象</th></tr>
+  <tr><td>保险丝</td><td>F1=4A</td><td>24V 输入</td><td>H桥功率</td></tr>
+  <tr><td>保险丝</td><td>F2=5A</td><td>5V 输入</td><td>5V 总线</td></tr>
+  <tr><td>保险丝</td><td>F3=3A</td><td>5V→舵机</td><td>舵机堵转</td></tr>
+  <tr><td>保险丝</td><td>F4=1A</td><td>5V→LDO</td><td>STM32</td></tr>
+  <tr><td>保险丝</td><td>F5=0.5A</td><td>5V→光敏</td><td>光敏</td></tr>
+  <tr><td>保险丝</td><td>F6=10A</td><td>H桥→推杆</td><td>推杆(模块要求)</td></tr>
+  <tr><td>TVS</td><td>SMBJ26A</td><td>24V 输入</td><td>浪涌/反接</td></tr>
+  <tr><td>TVS</td><td>SMBJ6.0A</td><td>5V 输入</td><td>浪涌</td></tr>
+  <tr><td>ESD</td><td>BAT54S ×5</td><td>PA0/PA1/PA2/PA7/PA5</td><td>接口 ESD</td></tr>
+  <tr><td>RC 滤波</td><td>220Ω+10nF / 1kΩ+10nF</td><td>信号线</td><td>发动机干扰</td></tr>
+  <tr><td>下拉</td><td>100kΩ ×5</td><td>PA0/PA1/PA2/PA7/PA5</td><td>复位防误动作</td></tr>
+  <tr><td>去耦</td><td>100nF×4 + 10µF</td><td>STM32 VDD</td><td>电源噪声</td></tr>
+</table>
+
+<h2>五、铜线/走线要求(给 PCB)</h2>
+<table>
+  <tr><th>网络</th><th>线宽</th><th>说明</th></tr>
+  <tr><td>24V 功率</td><td>≥2.0mm (2oz)</td><td>H桥电源,峰值 2.5A</td></tr>
+  <tr><td>24V GND</td><td>≥2.0mm (2oz)</td><td>星形接地</td></tr>
+  <tr><td>5V 总线</td><td>≥1.0mm (2oz)</td><td>舵机峰值 1.5A</td></tr>
+  <tr><td>舵机 5V 分支</td><td>≥1.0mm</td><td>独立走线+1000µF 就近</td></tr>
+  <tr><td>H桥电机输出</td><td>≥2.0mm</td><td>推杆 2.5A 峰值</td></tr>
+  <tr><td>信号线(PA0/1/2/5/6/7)</td><td>0.3mm</td><td>短走线,远离 24V</td></tr>
+  <tr><td>GND</td><td>覆铜</td><td>底层完整 GND 覆铜</td></tr>
+  <tr><td>24V vs 信号间距</td><td>≥1.0mm</td><td>安全间距</td></tr>
+</table>
+
+<div class="note">
+  📌 <b>关键提醒</b>:<br/>
+  1. 引脚按 v1.7:PA1/PA2/PA7/PA5(不是 PB12/PB13!)<br/>
+  2. HSI 内部时钟,无晶振,OSC 引脚悬空<br/>
+  3. 信号 GND(COM)与功率 GND 在板子单点共地(星形)<br/>
+  4. H桥模块 5V 输出端不用,COM 必须接地<br/>
+  5. 所有信号线加下拉(复位时模块不动作)
+</div>
+
+</body>
+</html>

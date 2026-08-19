@@ -1,0 +1,147 @@
+[
+  {
+    "desc": "MCU",
+    "query": "STM32F103C8T6",
+    "lcsc": "C8734",
+    "mfr": "STM32F103C8T6",
+    "package": "LQFP-48(7x7)",
+    "is_basic": false,
+    "stock": 214596,
+    "price_1pc": 1.037142857
+  },
+  {
+    "desc": "LDO",
+    "query": "AMS1117-3.3 SOT223",
+    "lcsc": "C22466222",
+    "mfr": "AMS1117-3.3",
+    "package": "SOT223",
+    "is_basic": false,
+    "stock": 15329,
+    "price_1pc": 0.0393
+  },
+  {
+    "desc": "TVS",
+    "query": "SMBJ26A",
+    "lcsc": "C123820",
+    "mfr": "SMBJ26A",
+    "package": "DO-214AA(SMB)",
+    "is_basic": false,
+    "stock": 24660,
+    "price_1pc": 0.0585
+  },
+  {
+    "desc": "TVS",
+    "query": "SMBJ6.0A",
+    "lcsc": "C19077560",
+    "mfr": "SMBJ6.0A",
+    "package": "DO-214AA(SMB)",
+    "is_basic": false,
+    "stock": 249084,
+    "price_1pc": 0.0569
+  },
+  {
+    "desc": "Schottky",
+    "query": "BAT54S",
+    "lcsc": "C19726",
+    "mfr": "BAT54SLT1G",
+    "package": "SOT-23",
+    "is_basic": false,
+    "stock": 819057,
+    "price_1pc": 0.0282
+  },
+  {
+    "desc": "CdS photoresistor",
+    "query": "GL5528",
+    "lcsc": "C125627",
+    "mfr": "GL5528",
+    "package": "插件,P=3mm",
+    "is_basic": false,
+    "stock": 49008,
+    "price_1pc": 0.0707
+  },
+  {
+    "desc": "capacitor",
+    "query": "100nF 0402 X7R",
+    "lcsc": "C1525",
+    "mfr": "CL05B104KO5NNNC",
+    "package": "0402",
+    "is_basic": true,
+    "stock": 16407331,
+    "price_1pc": 0.006
+  },
+  {
+    "desc": "capacitor",
+    "query": "10uF 0402 X5R",
+    "lcsc": "C15525",
+    "mfr": "CL05A106MQ5NUNC",
+    "package": "0402",
+    "is_basic": true,
+    "stock": 2281323,
+    "price_1pc": 0.0199
+  },
+  {
+    "desc": "capacitor",
+    "query": "10uF 1206 X5R",
+    "lcsc": "C13585",
+    "mfr": "CL31A106KBHNNNE",
+    "package": "1206",
+    "is_basic": true,
+    "stock": 1877266,
+    "price_1pc": 0.1757
+  },
+  {
+    "desc": "electrolytic",
+    "query": "100uF 16V 1206",
+    "found": false
+  },
+  {
+    "desc": "resistor",
+    "query": "10K 0402",
+    "lcsc": "C2906861",
+    "mfr": "FRC0402F1002TS",
+    "package": "0402",
+    "is_basic": false,
+    "stock": 23886316,
+    "price_1pc": 0.0027
+  },
+  {
+    "desc": "resistor",
+    "query": "10K 0603",
+    "lcsc": "C2906982",
+    "mfr": "FRC0603F1002TS",
+    "package": "0603",
+    "is_basic": false,
+    "stock": 10334802,
+    "price_1pc": 0.0038
+  },
+  {
+    "desc": "resistor",
+    "query": "4.7K 0402",
+    "lcsc": "C2906941",
+    "mfr": "FRC0402J472 TS",
+    "package": "0402",
+    "is_basic": false,
+    "stock": 8600923,
+    "price_1pc": 0.0017
+  },
+  {
+    "desc": "resistor",
+    "query": "1K 0402",
+    "lcsc": "C2906899",
+    "mfr": "FRC0402J102 TS",
+    "package": "0402",
+    "is_basic": false,
+    "stock": 18922013,
+    "price_1pc": 0.0021
+  },
+  {
+    "desc": "resistor",
+    "query": "100R 0402",
+    "lcsc": "C22369194",
+    "mfr": "RCA02100RJLF",
+    "package": "0402",
+    "is_basic": false,
+    "stock": 1125594,
+    "price_1pc": 0.0006
+  }
+]
